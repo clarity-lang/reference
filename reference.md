@@ -2,39 +2,124 @@
 
 This file contains the reference for the Clarity language. 
 
-## Language design
+## Design
 
-Clarity differs from most other smart contract languages in two essential ways:
+A smart contract is composed of two parts:
 
-* The language is interpreted and broadcasted on the blockchain as is (not compiled)
-* The language is decidable (not Turing complete)
-  
-Using an interpreted language ensures that the executed code is
-human-readable and auditable. A decidable language like Clarity makes
-it possible to determine precisely which code is going to be executed,
-for any function.
+1. A data-space, which is a set of tables of data which only the
+   smart contract may modify
+2. A set of functions which operate within the data-space of the
+   smart contract, though they may call public functions from other smart
+   contracts.
 
-A Clarity smart contract is composed of two parts-- a data space
-and a set of functions. Only the associated smart contract may modify
-its corresponding data space on the blockchain. Functions may be
-private and thus callable only from within the smart contract, or
-public and thus callable from other contracts. Users call smart
-contracts' public functions by broadcasting a transaction on the
-blockchain which invokes the public function. Contracts can also call
-public functions from other smart contracts.
+Users call smart contracts' public functions by broadcasting a
+transaction on the blockchain which invokes the public function.
 
-Note some of the key Clarity language rules and limitations.
+This smart contracting language differs from most other smart
+contracting languages in two important ways:
 
-* The only atomic types are booleans, integers, fixed length buffers,
-  and principals
-* Recursion is illegal and there is no lambda function.
-* Looping may only be performed via `map`, `filter`, or `fold`
-* There is support for lists of the atomic types, however, the only
-  variable length lists in the language appear as function inputs;
-  There is no support for list operations like append or join.
-* Variables are created via `let` binding and there is no support for
-  mutating functions like `set`.
+1. The language _is not_ intended to be compiled. The LISP language
+   described in this document is the specification for correctness.
+2. The language _is not_ Turing complete. This allows us to guarantee
+   that static analysis of programs to determine properties like
+   runtime cost and data usage can complete successfully.
 
+## Specifying Contracts
+
+A smart contract definition is specified in a LISP language with the
+following limitations:
+
+1. Recursion is illegal and there is no `lambda` function.
+2. Looping may only be performed via `map`, `filter`, or `fold`
+3. The only atomic types are booleans, integers, fixed length
+   buffers, and principals
+4. There is additional support for lists of these types (and lists of
+   lists), however the only variable length lists in the language
+   appear as function inputs.
+5. Variables may only be created via `let` binding and there
+   is no support for mutating functions like `set`.
+6. Defining of constants and functions are allowed for simplifying
+   code using `define-private` statement. However, these are purely
+   syntactic. If a definition cannot be inlined, the contract will be
+   rejected as illegal. These definitions are also _private_, in that
+   functions defined this way may only be called by other functions
+   defined in the given smart contract.
+7. Functions specified via `define-public` statements are _public_
+   functions.
+8. Functions specified via `define-read-only` statements are _public_
+   functions and perform _no_ state mutations. Any attempts to 
+   modify contract state by these functions or functions called by
+   these functions will result in an error.
+
+Public functions return a Response type result. If the function returns
+an `ok` type, then the function call is considered valid, and any changes
+made to the blockchain state will be materialized. If the function
+returns an `err` type, it will be considered invalid, and will have _no
+effect_ on the smart contract's state. So if function `foo.A` calls
+`bar.B`, and `bar.B` returns an `ok`, but `foo.A` returns an `err`, no
+effects from calling `foo.A` materialize--- including effects from
+`bar.B`. If, however, `bar.B` returns an `err` and `foo.A` returns an `ok`,
+there may be some database effects which are materialized from
+`foo.A`, but _no_ effects from calling `bar.B` will materialize.
+
+Unlike functions created by `define-public`, which may only return
+Response types, functions created with `define-read-only` may return
+any type.
+
+## List Operations
+
+* Lists may be multi-dimensional (i.e., lists may contain other lists), however each
+  entry of this list must be of the same type.
+* `filter` `map` and `fold` functions may only be called with user-defined functions
+  (i.e., functions defined with `(define-private ...)`, `(define-read-only ...)`, or
+  `(define-public ...)`) or simple native functions (e.g., `+`, `-`, `not`).
+* Functions that return lists of a different size than the input size
+  (e.g., `(append-item ...)`) take a required _constant_ parameter that indicates
+  the maximum output size of the function. This is enforced with a runtime check.
+
+## Data-Space Primitives
+
+Data within a smart contract's data-space is stored within
+`maps`. These stores relate a typed-tuple to another typed-tuple
+(almost like a typed key-value store). As opposed to a table data
+structure, a map will only associate a given key with exactly one
+value. Values in a given mapping are set or fetched using:
+
+1. `(map-get map-name key-tuple)` - This fetches the value
+  associated with a given key in the map, or returns `none` if there
+  is no such value.
+2. `(map-set! map-name key-tuple value-tuple)` - This will set the
+  value of `key-tuple` in the data map
+3. `(map-insert! map-name key-tuple value-tuple)` - This will set
+  the value of `key-tuple` in the data map if and only if an entry
+  does not already exist.
+4. `(map-delete! map-name key-tuple)` - This will delete `key-tuple`
+   from the data map
+
+We chose to use data maps as opposed to other data structures for two
+reasons:
+
+1. The simplicity of data maps allows for both a simple implementation
+within the VM, and easier reasoning about functions. By inspecting a
+given function definition, it is clear which maps will be modified and
+even within those maps, which keys are affected by a given invocation.
+2. The interface of data maps ensures that the return types of map
+operations are _fixed length_, which is a requirement for static
+analysis of smart contracts' runtime, costs, and other properties.
+
+A smart contract defines the data schema of a data map with the
+`define-map` call. The `define-map` function may only be called in the
+top-level of the smart-contract (similar to `define-private`). This
+function accepts a name for the map, and a definition of the structure
+of the key and value types. Each of these is a list of `(name, type)`
+pairs, and they specify the input and output type of `map-get`.
+Types are either the values `'principal`, `'integer`, `'bool` or
+the output of a call to `(buffer n)`, which defines an n-byte
+fixed-length buffer. 
+
+This interface, as described, disallows range-queries and
+queries-by-prefix on data maps. Within a smart contract function,
+you cannot iterate over an entire map.
 
 ## Clarity Type System
 
@@ -58,6 +143,52 @@ super type. The type system contains the following types:
 * `bool` := boolean value (`true` or `false`)
 * `int`  := signed 128-bit integer
 * `uint` := unsigned 128-bit integer
+
+### Type Admission
+
+**UnknownType**. The Clarity type system does not allow for specifying
+an "unknown" type, however, in type analysis, unknown types may be
+constructed and used by the analyzer. Such unknown types are used
+_only_ in the admission rules for `response` and `optional` types
+(i.e., the variant types).
+
+Type admission in Clarity follows the following rules:
+
+* Types will only admit objects of the same type, i.e., lists will only
+admit lists, tuples only admit tuples, bools only admit bools.
+* A tuple type `A` admits another tuple type `B` iff they have the exact same
+  key names, and every key type of `A` admits the corresponding key type of `B`.
+* A list type `A` admits another list type `B` iff `A.max-len >= B.max-len` and
+  `A.entry-type` admits `B.entry-type`.
+* A buffer type `A` admits another buffer type `B` iff `A.max-len >= B.max-len`.
+* An optional type `A` admits another optional type `B` iff:
+  * `A.some-type` admits `B.some-type` _OR_ `B.some-type` is an unknown type:
+    this is the case if `B` only ever corresponds to `none`
+* A response type `A` admits another response type `B` if one of the following is true:
+  * `A.ok-type` admits `B.ok-type` _AND_ `A.err-type` admits `B.err-type`
+  * `B.ok-type` is unknown _AND_ `A.err-type` admits `B.err-type`
+  * `B.err-type` is unknown _AND_ `A.ok-type` admits `B.ok-type`
+* Principals, bools, ints, and uints only admit types of the exact same type.
+
+Type admission is used for determining whether an object is a legal argument for
+a function, or for insertion into the database. Type admission is _also_ used
+during type analysis to determine the return types of functions. In particular,
+a function's return type is the least common supertype of each type returned from any
+control path in the function. For example:
+
+```
+(define-private (if-types (input bool))
+  (if input
+     (ok 1)
+     (err false)))
+```
+
+The return type of `if-types` is the least common supertype of `(ok
+1)` and `(err false)` (i.e., the most restrictive type that contains
+all returns). In this case, that type `(response int bool)`. Because
+Clarity _does not_ have a universal supertype, it may be impossible to
+determine such a type. In these cases, the functions are illegal, and
+will be rejected during type analysis.
 
 ## Public Functions
 
