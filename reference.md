@@ -32,7 +32,7 @@ following limitations:
 1. Recursion is illegal and there is no `lambda` function.
 2. Looping may only be performed via `map`, `filter`, or `fold`
 3. The only atomic types are booleans, integers, fixed length
-   buffers, and principals
+   buffers, fixed length strings and principals
 4. There is additional support for lists of these types (and lists of
    lists), however the only variable length lists in the language
    appear as function inputs.
@@ -114,8 +114,8 @@ function accepts a name for the map, and a definition of the structure
 of the key and value types. Each of these is a list of `(name, type)`
 pairs, and they specify the input and output type of `map-get`.
 Types are either the values `'principal`, `'integer`, `'bool` or
-the output of a call to `(buffer n)`, which defines an n-byte
-fixed-length buffer. 
+the output of a call to `(buff n)`, `(string-ascii n)`, or `(string-utf8 n)` 
+which define a fixed-length sequence. 
 
 This interface, as described, disallows range-queries and
 queries-by-prefix on data maps. Within a smart contract function,
@@ -138,6 +138,8 @@ super type. The type system contains the following types:
 * `(optional some-type)` - an option type for objects that can either be
   `(some value)` or `none`
 * `(buff max-len)` := byte buffer or maximum length `max-len`.
+* `(string-ascii max-len)` := ASCII string of maximum length `max-len`.
+* `(string-utf8 max-len)` := UTF-8 string of maximum length `max-len`.
 * `principal` := object representing a principal (whether a contract principal
   or standard principal).
 * `bool` := boolean value (`true` or `false`)
@@ -161,6 +163,8 @@ admit lists, tuples only admit tuples, bools only admit bools.
 * A list type `A` admits another list type `B` iff `A.max-len >= B.max-len` and
   `A.entry-type` admits `B.entry-type`.
 * A buffer type `A` admits another buffer type `B` iff `A.max-len >= B.max-len`.
+* An ascii string type `A` admits another ascii string type `B` iff `A.max-len >= B.max-len`.
+* A utf string type `A` admits another utf string type `B` iff `A.max-len >= B.max-len`.
 * An optional type `A` admits another optional type `B` iff:
   * `A.some-type` admits `B.some-type` _OR_ `B.some-type` is an unknown type:
     this is the case if `B` only ever corresponds to `none`
