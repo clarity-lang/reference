@@ -161,7 +161,7 @@ admit lists, tuples only admit tuples, bools only admit bools.
 * A list type `A` admits another list type `B` iff `A.max-len >= B.max-len` and
   `A.entry-type` admits `B.entry-type`.
 * A buffer type `A` admits another buffer type `B` iff `A.max-len >= B.max-len`.
-* An optional type `A` admits another optional type `B` iff:
+* An optional type `A` admits another optional type `B` if:
   * `A.some-type` admits `B.some-type` _OR_ `B.some-type` is an unknown type:
     this is the case if `B` only ever corresponds to `none`
 * A response type `A` admits another response type `B` if one of the following is true:
