@@ -272,7 +272,7 @@ conformance using the `impl-trait` statement:
 (impl-trait .contract-defining-trait.can-transfer-tokens)
 ```
 
-Explicit conformance should be prefered when adequate.
+Explicit conformance should be preferred when adequate.
 It acts as a safeguard by helping the static analysis system to detect
 deviations in method signatures before contract deployment.
 
