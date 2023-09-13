@@ -17,7 +17,7 @@ The point is to have early discussions here before moving to an actual SIP.
 
 ## From candidate to SIP
 
-Once an issue is opened, it can have the tag `clarity-3-candidate`, meaning that the idea will be considered to be added to the updcoming version clarity.
+Once an issue is opened, it can have the tag `clarity-3-candidate`, meaning that the idea will be considered to be added to the upcoming version clarity.
 While the issue has this tag, it's time to debate, brainstorm and improve the specification.
 
 Moving forward, the proposal will fall under one of these tags:
