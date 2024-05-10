@@ -164,7 +164,7 @@ admit lists, tuples only admit tuples, bools only admit bools.
   `A.entry-type` admits `B.entry-type`.
 * A buffer type `A` admits another buffer type `B` iff `A.max-len >= B.max-len`.
 * An ascii string type `A` admits another ascii string type `B` iff `A.max-len >= B.max-len`.
-* A utf string type `A` admits another utf string type `B` iff `A.max-len >= B.max-len`.
+* A utf-8 string type `A` admits another utf-8 string type `B` iff `A.max-len >= B.max-len`.
 * An optional type `A` admits another optional type `B` iff:
   * `A.some-type` admits `B.some-type` _OR_ `B.some-type` is an unknown type:
     this is the case if `B` only ever corresponds to `none`
