@@ -13,11 +13,11 @@ The point is to have early discussions here before moving to an actual SIP.
 
 - Make sure that a similar issue doesn't already exists (check the closed ones)
 - Be specific
-- Give use cases and usage exemples
+- Give use cases and usage examples
 
 ## From candidate to SIP
 
-Once an issue is opened, it can have the tag `clarity-3-candidate`, meaning that the idea will be considered to be added to the upcoming version clarity.
+Once an issue is opened, it can have the tag `clarity-3-candidate`, meaning that the idea will be considered to be added to the upcoming version of Clarity.
 While the issue has this tag, it's time to debate, brainstorm and improve the specification.
 
 Moving forward, the proposal will fall under one of these tags:
@@ -26,4 +26,4 @@ Moving forward, the proposal will fall under one of these tags:
 - `icebox` meaning that this idea won't be included in the next Clarity version but maybe in later ones
 - `wontfix` this idea will not be included in Clarity (and close the issue).
 
-The Blockchain team should be responsible for setting this tags.
+The Blockchain team should be responsible for setting these tags.
