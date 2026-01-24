@@ -88,12 +88,12 @@ value. Values in a given mapping are set or fetched using:
 1. `(map-get map-name key-tuple)` - This fetches the value
   associated with a given key in the map, or returns `none` if there
   is no such value.
-2. `(map-set! map-name key-tuple value-tuple)` - This will set the
+2. `(map-set map-name key-tuple value-tuple)` - This will set the
   value of `key-tuple` in the data map
-3. `(map-insert! map-name key-tuple value-tuple)` - This will set
+3. `(map-insert map-name key-tuple value-tuple)` - This will set
   the value of `key-tuple` in the data map if and only if an entry
   does not already exist.
-4. `(map-delete! map-name key-tuple)` - This will delete `key-tuple`
+4. `(map-delete map-name key-tuple)` - This will delete `key-tuple`
    from the data map
 
 We chose to use data maps as opposed to other data structures for two
@@ -269,14 +269,14 @@ Or imported from an existing contract:
 
 Looking at trait conformance, callee contracts have two different paths.
 They can either be "compatible" with a trait by defining methods
-matching some of the methods defined in a trait, or explicitely declare
+matching some of the methods defined in a trait, or explicitly declare
 conformance using the `impl-trait` statement:
 
 ```scheme
 (impl-trait .contract-defining-trait.can-transfer-tokens)
 ```
 
-Explicit conformance should be prefered when adequate.
+Explicit conformance should be preferred when adequate.
 It acts as a safeguard by helping the static analysis system to detect
 deviations in method signatures before contract deployment.
 
@@ -299,7 +299,7 @@ Assets in the smart contracting language and blockchain are
 the principal type may own an asset. For the case of public-key hash
 and multi-signature Stacks addresses, a given principal can operate on
 their assets by issuing a signed transaction on the blockchain. _Smart
-contracts_ may also be principals (reprepresented by the smart
+contracts_ may also be principals (represented by the smart
 contract's identifier), however, there is no private key associated
 with the smart contract, and it cannot broadcast a signed transaction
 on the blockchain.
@@ -339,7 +339,7 @@ always be "Bob"), but also using the `contract-caller`. This could be
 used to ensure that a particular function is only ever called directly
 and never called via an inter-contract call (by asserting that
 `tx-sender` and `contract-caller` are equal). We provide an example of
-a two different types of authorization checks in the rocket ship
+two different types of authorization checks in the rocket ship
 example below.
 
 ## Smart contracts as principals
